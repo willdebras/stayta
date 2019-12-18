@@ -12,13 +12,17 @@ stata_data <- function(x) {
     return(read_dta(path_strip))
 }
 
+
+
 stata2r <- function(x) {
     
     
   #need method to detect the first word after a colon (command)
 
 
-    if (str_detect(x, "tab")) {
+    if (str_detect(x, "^use")) {
+      
+      stata_data(x)
         
         
         
