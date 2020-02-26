@@ -123,11 +123,11 @@ init <- "use \"auto.dta\""
 
 # Define UI for application that draws a histogram
 ui <-   fluidPage(
-    h1("Stata editor"),
+    h1("Stayta editor"),
     fluidRow(
         column(
             6,
-            h2("Source Code"),
+            h2("Do-file Editor"),
             aceEditor("code", mode = "text", height = "500px", value = init),
             actionButton("eval", "Evaluate")
         ),
