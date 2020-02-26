@@ -1,5 +1,7 @@
 
 library(haven)
+library(stringr)
+library(magrittr)
 
 stata_data <- function(x) {
   
@@ -13,20 +15,75 @@ stata_data <- function(x) {
 }
 
 
+parse_code <- function(x) {
+  
+  code <- as.data.frame(stringr::str_split(x, "\n"))
+  
+  return(code)
+  
+  
+}
+
+tab <- function(x) {
+  
+  vars <- substring(x, 5)
+  
+  vars_list <- str_split(vars, " ")
+  
+  
+  
+  if (length(vars_list[[1]])>1) {
+    
+    vars_eval <- paste0("as_factor(test_df$", vars_list[[1]], ")")
+    
+    vars_eval_list <- paste0(vars_eval, collapse = ", ")
+    
+    val <- eval(parse(text = paste0("table(", vars_eval_list, ")" )))
+    
+    return(val)
+    
+  }
+  
+  else {
+    
+    tib <- rbind(table(as_factor(test_df[[vars_list[[1]]]])), prop.table(table(as_factor(test_df[[vars_list[[1]]]]))))
+    
+    return(tib)
+    
+  }
+  
+}
+
+
 
 stata2r <- function(x) {
     
     
   #need method to detect the first word after a colon (command)
+  
+  if (is.null(x)) {
+    
+    return(NULL)
+  }
 
 
     if (str_detect(x, "^use")) {
       
-      stata_data(x)
+      test_df <- stata_data(x)
+      
+      return(test_df)
         
         
         
-    }  
+    }
+  
+    if (str_detect(x, "^tab")) {
+      
+      test_table <- tab(x)
+      
+      return(test_table)
+      
+    }
 
     
 }
@@ -38,12 +95,7 @@ stata2r <- function(x) {
 library(shiny)
 library(shinyAce)
 
-init <- "df <- data.frame(
-  num=1:4,
-  let=LETTERS[2:5],
-  rand=rnorm(4)
-)
-df"
+init <- "use \"auto.dta\""
 
 # Define UI for application that draws a histogram
 ui <-   fluidPage(
@@ -52,13 +104,13 @@ ui <-   fluidPage(
         column(
             6,
             h2("Source Code"),
-            aceEditor("code", mode = "text", height = "200px", value = init),
+            aceEditor("code", mode = "text", height = "500px", value = init),
             actionButton("eval", "Evaluate")
         ),
         column(
             6,
             h2("Output"),
-            verbatimTextOutput("output")
+            verbatimTextOutput("output")#,
             #verbatimTextOutput("inp")
         )
     )
@@ -69,7 +121,12 @@ server <- function(input, output, session) {
         output$output <- renderPrint({
             input$eval
           
-          eval(stata_data(isolate(input$code)))
+          #eval(stata2r(isolate(input$code)))
+          
+          code_df <- parse_code(isolate(input$code)) %>%
+            `colnames<-`(c("test"))
+          
+          eval(lapply(code_df$test, stata2r))
           
           
             #eval(stata_data(isolate(input$code)))
@@ -79,7 +136,9 @@ server <- function(input, output, session) {
         output$inp <- renderPrint({
           input$eval
           
-          parse(text = isolate(input$code))
+          input$code
+          
+          #parse(text = isolate(input$code))
           
         })
     
