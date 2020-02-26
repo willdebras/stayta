@@ -56,6 +56,20 @@ tab <- function(x) {
   
 }
 
+stata_glm <- function(x) {
+  
+  vars <- substring(x, 5)
+  
+  vars_list <- str_split(vars, " ")
+  
+  covs <- paste0(vars_list[[1]][-1], collapse = " + ")
+  
+  formula_st <- as.formula(paste0(vars_list[[1]][1], " ~ ", covs))
+  
+  glm(formula_st, data = test_df)
+  
+}
+
 
 
 stata2r <- function(x) {
@@ -86,6 +100,14 @@ stata2r <- function(x) {
       return(test_table)
       
     }
+  
+  if (str_detect(x, "^glm")) {
+    
+    test_glm <- stata_glm(x)
+    
+    return(test_glm)
+    
+  }
 
     
 }
