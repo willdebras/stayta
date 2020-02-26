@@ -46,7 +46,9 @@ tab <- function(x) {
   
   else {
     
-    tib <- rbind(table(as_factor(test_df[[vars_list[[1]]]])), prop.table(table(as_factor(test_df[[vars_list[[1]]]]))))
+    tib <- as.data.frame(rbind(table(as_factor(test_df[[vars_list[[1]]]])), round(prop.table(table(as_factor(test_df[[vars_list[[1]]]]))), digits = 7)))
+    
+    
     
     return(tib)
     
