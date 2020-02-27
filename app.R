@@ -85,7 +85,7 @@ stata2r <- function(x) {
 
     if (str_detect(x, "^use")) {
       
-      test_df <- stata_data(x)
+      test_df <<- stata_data(x)
       
       return(test_df)
         
@@ -125,18 +125,39 @@ init <- "use \"auto.dta\""
 ui <-   fluidPage(
     h1("Stayta editor"),
     fluidRow(
+      column(
+        6,
+        h2("Do-file Editor"),
+      ),
+      column(
+        6,
+        h2("Output"),
+      )
+      
+      
+    ),
+    fluidRow(
         column(
             6,
-            h2("Do-file Editor"),
-            aceEditor("code", mode = "text", height = "500px", value = init),
-            actionButton("eval", "Evaluate")
+            aceEditor("code", mode = "text", height = "600px", value = init),
+            style = "overflow-y:scroll; max-height: 620px"
         ),
         column(
             6,
-            h2("Output"),
-            verbatimTextOutput("output")#,
+            verbatimTextOutput("output"),
+            style = "overflow-y:scroll; max-height: 620px"
+            #,
             #verbatimTextOutput("inp")
         )
+    ),
+    
+    fluidRow(
+      column(
+        6,
+        br(),
+        actionButton("eval", "Evaluate"),
+
+      )
     )
 )
 
@@ -150,11 +171,15 @@ server <- function(input, output, session) {
           code_df <- parse_code(isolate(input$code)) %>%
             `colnames<-`(c("test"))
           
-          eval(lapply(code_df$test, stata2r))
+          print <- eval(lapply(code_df$test, stata2r))
           
+          names(print) <- seq_along(print)
           
-            #eval(stata_data(isolate(input$code)))
-            #eval(parse(text = isolate(input$code)))
+          print[sapply(print, is.null)] <- NULL
+          
+          return(print)
+          
+
         })
         
         output$inp <- renderPrint({
