@@ -56,6 +56,23 @@ tab <- function(x) {
   
 }
 
+gen <- function(x) {
+  
+  com <- substring(x, 5)
+  
+  com_spl <- stringr::str_split(com, "=")
+  
+  x <- trimws(com_spl[[1]][1])
+  y <- trimws(com_spl[[1]][2])
+  
+  test_df[[x]] <<- y
+  
+  print(head(test_df[[x]]))
+        
+  
+  
+}
+
 stata_glm <- function(x) {
   
   vars <- substring(x, 5)
@@ -106,6 +123,12 @@ stata2r <- function(x) {
     test_glm <- stata_glm(x)
     
     return(test_glm)
+    
+  }
+  
+  if (str_detect(x, "^gen")) {
+    
+    gen(x)
     
   }
 
