@@ -65,8 +65,15 @@ gen <- function(x) {
   x <- trimws(com_spl[[1]][1])
   y <- trimws(com_spl[[1]][2])
   
+  if (y==".") {
+    y <- NA
+    
+  }
+  
   test_df[[x]] <<- y
   
+  
+  print(x)
   print(head(test_df[[x]]))
         
   
