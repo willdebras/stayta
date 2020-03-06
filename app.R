@@ -2,6 +2,7 @@
 library(haven)
 library(stringr)
 library(magrittr)
+library(data.table)
 
 stata_data <- function(x) {
   
@@ -77,15 +78,20 @@ gen <- function(x) {
 }
 
 replace <- function(x) {
-  substring(x, 9)
+  com <- substring(x, 9)
   
-  com_spl <- stringr::str_split(com, "=")
+  com_spl <- stringr::str_split(com, "if")
+  com_spl_2 <- stringr::str_split(com_spl[[1]], "=")
   
-  x <- trimws(com_spl[[1]][1])
-  y <- trimws(com_spl[[1]][2])
+  x <- trimws(com_spl_2[[1]][1])
+  y <- trimws(com_spl_2[[1]][2])
+  z <- trimws(com_spl_2[[2]][1])
   
+  #replace y = 1 if x > 3
   
-  
+  #test_df[["newvar"]][test_df[["mpg"]] > 20] <- 1
+  eval(parse(text = paste0("test_df$", x, "[", "test_df$", z, "]", "<<-", y)))
+  #test_df[[x]][eval(parse(paste0("test_df$", z)))] <- y
   
 }
 
@@ -145,6 +151,12 @@ stata2r <- function(x) {
   if (str_detect(x, "^gen")) {
     
     gen(x)
+    
+  }
+  
+  if (str_detect(x, "^replace")) {
+    
+    replace(x)
     
   }
 
