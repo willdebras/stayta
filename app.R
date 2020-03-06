@@ -73,9 +73,18 @@ gen <- function(x) {
   test_df[[x]] <<- y
   
   
-  print(x)
-  print(head(test_df[[x]]))
-        
+  
+}
+
+replace <- function(x) {
+  substring(x, 9)
+  
+  com_spl <- stringr::str_split(com, "=")
+  
+  x <- trimws(com_spl[[1]][1])
+  y <- trimws(com_spl[[1]][2])
+  
+  
   
   
 }
