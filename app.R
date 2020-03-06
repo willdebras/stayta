@@ -75,6 +75,7 @@ gen <- function(x) {
   
   
   
+  
 }
 
 replace <- function(x) {
@@ -152,11 +153,15 @@ stata2r <- function(x) {
     
     gen(x)
     
+    return(paste0(x))
+    
   }
   
   if (str_detect(x, "^replace")) {
     
     replace(x)
+    
+    return(paste0(x))
     
   }
 
