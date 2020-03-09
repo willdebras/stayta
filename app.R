@@ -193,6 +193,12 @@ stata2r <- function(x) {
     getwd()
     
   }
+  
+  else {
+    
+    return(NULL)
+    
+  }
 
     
 }
