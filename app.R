@@ -106,7 +106,21 @@ stata_glm <- function(x) {
   
   formula_st <- as.formula(paste0(vars_list[[1]][1], " ~ ", covs))
   
-  glm(formula_st, data = test_df)
+  summary(glm(formula_st, data = test_df))
+  
+}
+
+stata_logit <- function(x) {
+  
+  vars <- substring(x, 7)
+  
+  vars_list <- str_split(vars, " ")
+  
+  covs <- paste0(vars_list[[1]][-1], collapse = " + ")
+  
+  formula_st <- as.formula(paste0("as.factor(", vars_list[[1]][1], ") ~ ", covs))
+  
+  summary(glm(formula_st, family=binomial(link='logit'), data = test_df))
   
 }
 
@@ -126,6 +140,7 @@ stata2r <- function(x) {
     if (str_detect(x, "^use")) {
       
       test_df <<- stata_data(x)
+      as_factor(test_df)
       
       return(test_df)
         
@@ -149,6 +164,14 @@ stata2r <- function(x) {
     
   }
   
+  if (str_detect(x, "^logit")) {
+    
+    test_logit <- stata_logit(x)
+    
+    return(test_logit)
+    
+  }
+  
   if (str_detect(x, "^gen")) {
     
     gen(x)
@@ -164,6 +187,12 @@ stata2r <- function(x) {
     return(paste0(x))
     
   }
+  
+  if (str_detect(x, "^pwd")) {
+    
+    getwd()
+    
+  }
 
     
 }
@@ -174,6 +203,7 @@ stata2r <- function(x) {
 
 library(shiny)
 library(shinyAce)
+library(shinyWidgets)
 
 init <- "use \"auto.dta\""
 
@@ -182,11 +212,11 @@ ui <-   fluidPage(
     h1("Stayta editor"),
     fluidRow(
       column(
-        6,
+        5,
         h2("Do-file Editor"),
       ),
       column(
-        6,
+        4,
         h2("Output"),
       )
       
@@ -194,16 +224,24 @@ ui <-   fluidPage(
     ),
     fluidRow(
         column(
-            6,
+            5,
             aceEditor("code", mode = "text", height = "600px", value = init),
             style = "overflow-y:scroll; max-height: 620px"
         ),
         column(
-            6,
+            4,
             verbatimTextOutput("output"),
             style = "overflow-y:scroll; max-height: 620px"
             #,
             #verbatimTextOutput("inp")
+        ),
+        column(
+          1,
+          uiOutput("radio_vars")
+        ),
+        column(
+          2,
+          verbatimTextOutput("var_info")
         )
     ),
     
@@ -244,6 +282,31 @@ server <- function(input, output, session) {
           input$code
           
           #parse(text = isolate(input$code))
+          
+        })
+        
+        output$radio_vars <- renderUI({
+          
+          input$eval
+          
+          prettyRadioButtons(inputId = "radio_vars",
+                             label = "Variable Info",
+                             choices = colnames(test_df),
+                             plain = TRUE, 
+                             shape = "square",
+                             bigger = TRUE)
+          
+        })
+        
+        output$var_info <- renderPrint({
+          
+          input$radio_vars
+          
+          print_info <- list(eval(parse(text = paste0("attributes(test_df$", isolate(input$radio_vars), ")"))),
+                             eval(parse(text = paste0("class(test_df$", isolate(input$radio_vars), ")")))
+          )
+          
+          return(print_info)
           
         })
     
