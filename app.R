@@ -18,7 +18,8 @@ stata_data <- function(x) {
 
 parse_code <- function(x) {
   
-  code <- as.data.frame(stringr::str_split(x, "\n"))
+  code <- as.data.frame(stringr::str_split(x, "\n"), stringsAsFactors = FALSE)
+  
   
   return(code)
   
@@ -194,9 +195,17 @@ stata2r <- function(x) {
     
   }
   
-  else {
+  if (str_detect(x, "^$")) {
     
     return(NULL)
+    
+  }
+  
+  else {
+    
+    err <- str_split_fixed(x, " ", n = 2)[1]
+    
+    return(paste0("The function `", err, "` is incorrect or not available in stayta v.0.0.0.0.1"))
     
   }
 
