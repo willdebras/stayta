@@ -249,6 +249,8 @@ ui <-   fluidPage(
         column(
             5,
             aceEditor("code", mode = "text", height = "600px", value = init,
+                      selectionId = "selection",
+                      cursorId = "cursor",
                       hotkeys = list(
                         run_key = list(win = "Ctrl-D",
                                        mac = "CMD-D")
@@ -296,19 +298,43 @@ server <- function(input, output, session) {
           old_values <- values()
           
           
-          code_df <- parse_code(isolate(input$code)) %>%
-            `colnames<-`(c("test"))
+          old_values <- values()
           
-          print <- eval(lapply(code_df$test, stata2r))
+          if (str_detect(isolate(input$code_selection), "^$")) {
+            
+            code_df <- parse_code(isolate(input$code)) %>%
+              `colnames<-`(c("test"))
+            
+            print <- eval(lapply(code_df$test, stata2r))
+            
+            names(print) <- seq_along(print)
+            
+            print[sapply(print, is.null)] <- NULL
+            
+            new_str <- c(old_values,
+                         print)
+            
+            values(new_str) 
+            
+          }
           
-          names(print) <- seq_along(print)
-          
-          print[sapply(print, is.null)] <- NULL
-          
-          new_str <- c(old_values,
-                          print)
-          
-          values(new_str)
+          else {
+            
+            code_df <- parse_code(input$code_selection) %>%
+              `colnames<-`(c("test"))
+            
+            print <- eval(lapply(code_df$test, stata2r))
+            
+            names(print) <- seq_along(print)
+            
+            print[sapply(print, is.null)] <- NULL
+            
+            new_str <- c(old_values,
+                         print)
+            
+            values(new_str) 
+            
+          }
           
         })
         
@@ -316,20 +342,55 @@ server <- function(input, output, session) {
           
           old_values <- values()
           
+          if (str_detect(isolate(input$code_selection), "^$")) {
+            
+            code_df <- parse_code(isolate(input$code)) %>%
+              `colnames<-`(c("test"))
+            
+            print <- eval(lapply(code_df$test, stata2r))
+            
+            names(print) <- seq_along(print)
+            
+            print[sapply(print, is.null)] <- NULL
+            
+            new_str <- c(old_values,
+                         print)
+            
+            values(new_str) 
+            
+          }
           
-          code_df <- parse_code(isolate(input$code)) %>%
-            `colnames<-`(c("test"))
+          else {
+            
+            code_df <- parse_code(input$code_selection) %>%
+              `colnames<-`(c("test"))
+            
+            print <- eval(lapply(code_df$test, stata2r))
+            
+            names(print) <- seq_along(print)
+            
+            print[sapply(print, is.null)] <- NULL
+            
+            new_str <- c(old_values,
+                         print)
+            
+            values(new_str) 
+            
+          }
           
-          print <- eval(lapply(code_df$test, stata2r))
-          
-          names(print) <- seq_along(print)
-          
-          print[sapply(print, is.null)] <- NULL
-          
-          new_str <- c(old_values,
-                          print)
-          
-          values(new_str)
+          # code_df <- parse_code(isolate(input$code)) %>%
+          #   `colnames<-`(c("test"))
+          # 
+          # print <- eval(lapply(code_df$test, stata2r))
+          # 
+          # names(print) <- seq_along(print)
+          # 
+          # print[sapply(print, is.null)] <- NULL
+          # 
+          # new_str <- c(old_values,
+          #                 print)
+          # 
+          # values(new_str)
           
         })
         
