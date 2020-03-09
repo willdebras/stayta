@@ -82,11 +82,11 @@ replace <- function(x) {
   com <- substring(x, 9)
   
   com_spl <- stringr::str_split(com, "if")
-  com_spl_2 <- stringr::str_split(com_spl[[1]], "=")
+  com_spl_2 <- stringr::str_split_fixed(com_spl[[1]][1], "=", n = 2)
   
   x <- trimws(com_spl_2[[1]][1])
   y <- trimws(com_spl_2[[1]][2])
-  z <- trimws(com_spl_2[[2]][1])
+  z <- trimws(com_spl[[1]][2])
   
   #replace y = 1 if x > 3
   
@@ -205,7 +205,15 @@ library(shiny)
 library(shinyAce)
 library(shinyWidgets)
 
-init <- "use \"auto.dta\""
+init <- "use \"auto.dta\"
+
+gen mpg_binary = 0
+replace mpg_binary = 1 if mpg > 25
+
+tab mpg_binary mpg
+
+glm mpg price trunk weight
+"
 
 # Define UI for application that draws a histogram
 ui <-   fluidPage(
@@ -241,7 +249,8 @@ ui <-   fluidPage(
         ),
         column(
           2,
-          verbatimTextOutput("var_info")
+          verbatimTextOutput("var_info"),
+          style = "overflow-y:scroll; max-height: 620px"
         )
     ),
     
