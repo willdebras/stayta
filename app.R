@@ -298,9 +298,26 @@ server <- function(input, output, session) {
           old_values <- values()
           
           
-          old_values <- values()
+            
+            if (is.null(input$code_selection)) {
+              
+              code_df <- parse_code(isolate(input$code)) %>%
+                `colnames<-`(c("test"))
+              
+              print <- eval(lapply(code_df$test, stata2r))
+              
+              names(print) <- seq_along(print)
+              
+              print[sapply(print, is.null)] <- NULL
+              
+              new_str <- c(old_values,
+                           print)
+              
+              values(new_str) 
+              
+            }
           
-          if (str_detect(isolate(input$code_selection), "^$")) {
+          else if (str_detect(isolate(input$code_selection), "^$")) {
             
             code_df <- parse_code(isolate(input$code)) %>%
               `colnames<-`(c("test"))
@@ -317,6 +334,8 @@ server <- function(input, output, session) {
             values(new_str) 
             
           }
+            
+        
           
           else {
             
@@ -342,7 +361,7 @@ server <- function(input, output, session) {
           
           old_values <- values()
           
-          if (str_detect(isolate(input$code_selection), "^$")) {
+          if (is.null(input$code_selection)) {
             
             code_df <- parse_code(isolate(input$code)) %>%
               `colnames<-`(c("test"))
@@ -359,6 +378,26 @@ server <- function(input, output, session) {
             values(new_str) 
             
           }
+          
+          else if (str_detect(isolate(input$code_selection), "^$")) {
+            
+            code_df <- parse_code(isolate(input$code)) %>%
+              `colnames<-`(c("test"))
+            
+            print <- eval(lapply(code_df$test, stata2r))
+            
+            names(print) <- seq_along(print)
+            
+            print[sapply(print, is.null)] <- NULL
+            
+            new_str <- c(old_values,
+                         print)
+            
+            values(new_str) 
+            
+          }
+          
+          
           
           else {
             
@@ -378,19 +417,6 @@ server <- function(input, output, session) {
             
           }
           
-          # code_df <- parse_code(isolate(input$code)) %>%
-          #   `colnames<-`(c("test"))
-          # 
-          # print <- eval(lapply(code_df$test, stata2r))
-          # 
-          # names(print) <- seq_along(print)
-          # 
-          # print[sapply(print, is.null)] <- NULL
-          # 
-          # new_str <- c(old_values,
-          #                 print)
-          # 
-          # values(new_str)
           
         })
         
@@ -411,6 +437,8 @@ server <- function(input, output, session) {
         })
         
         output$inp <- renderPrint({
+          
+          
           input$eval
           
           input$code
