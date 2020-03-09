@@ -82,7 +82,7 @@ replace <- function(x) {
   com <- substring(x, 9)
   
   com_spl <- stringr::str_split(com, "if")
-  com_spl_2 <- stringr::str_split_fixed(com_spl[[1]][1], "=", n = 2)
+  com_spl_2 <- stringr::str_split(com_spl[[1]][1], "=")
   
   x <- trimws(com_spl_2[[1]][1])
   y <- trimws(com_spl_2[[1]][2])
