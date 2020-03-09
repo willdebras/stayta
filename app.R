@@ -233,7 +233,12 @@ ui <-   fluidPage(
     fluidRow(
         column(
             5,
-            aceEditor("code", mode = "text", height = "600px", value = init),
+            aceEditor("code", mode = "text", height = "600px", value = init,
+                      hotkeys = list(
+                        run_key = list(win = "Ctrl-D",
+                                       mac = "CMD-D")
+                        
+                      )),
             style = "overflow-y:scroll; max-height: 620px"
         ),
         column(
@@ -266,10 +271,15 @@ ui <-   fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
-        output$output <- renderPrint({
-            input$eval
+  
+  
+  values <- reactiveVal(NULL)
+  
+  
+        observeEvent(input$eval, {
           
-          #eval(stata2r(isolate(input$code)))
+          old_values <- values()
+          
           
           code_df <- parse_code(isolate(input$code)) %>%
             `colnames<-`(c("test"))
@@ -280,7 +290,46 @@ server <- function(input, output, session) {
           
           print[sapply(print, is.null)] <- NULL
           
-          return(print)
+          new_str <- c(old_values,
+                          print)
+          
+          values(new_str)
+          
+        })
+        
+        observeEvent(input$code_run_key, {
+          
+          old_values <- values()
+          
+          
+          code_df <- parse_code(isolate(input$code)) %>%
+            `colnames<-`(c("test"))
+          
+          print <- eval(lapply(code_df$test, stata2r))
+          
+          names(print) <- seq_along(print)
+          
+          print[sapply(print, is.null)] <- NULL
+          
+          new_str <- c(old_values,
+                          print)
+          
+          values(new_str)
+          
+        })
+        
+  
+        
+  
+        output$output <- renderPrint({
+          
+          if (is.null(values()))
+            return(c("Welcome to stayta v. 0.0.0.0.0.1.", "Enjoy your stay ;)"))
+          
+          else(
+            return(values())
+          )
+
           
 
         })
