@@ -1,9 +1,14 @@
+#Stayta is a project to parse and evaluate stata code into R
+#This application allows one to run stata code in a text editor and receive R output
 
-library(haven)
-library(stringr)
-library(magrittr)
-library(data.table)
 
+#Load necessary libraries for parsing functions
+library(haven) #reads .dta files
+library(stringr) #for parsing and manipulating stata commands as text
+library(magrittr) #for piping functions together
+library(data.table) #for fast, efficient manipulation of data
+
+#Function that parses "use x" type commands 
 stata_data <- function(x) {
   
 
@@ -16,6 +21,8 @@ stata_data <- function(x) {
 }
 
 
+#Function that takes input of text editor and converts it into line by line commands
+#To add: splitting and parsing of , options
 parse_code <- function(x) {
   
   code <- as.data.frame(stringr::str_split(x, "\n"), stringsAsFactors = FALSE)
@@ -26,6 +33,7 @@ parse_code <- function(x) {
   
 }
 
+#Function that parses and evaluates "tab x y" and "tab x" inputs
 tab <- function(x) {
   
   vars <- substring(x, 5)
@@ -58,6 +66,7 @@ tab <- function(x) {
   
 }
 
+#Function that parses and evaluates "gen x" inputs
 gen <- function(x) {
   
   com <- substring(x, 5)
@@ -79,6 +88,7 @@ gen <- function(x) {
   
 }
 
+#Function that parses and evaluates "replace x" inputs
 replace <- function(x) {
   com <- substring(x, 9)
   
@@ -97,6 +107,9 @@ replace <- function(x) {
   
 }
 
+#Functions to parse model inputs:
+
+#Function to parse "glm dependent cov_x cov_y" inputs
 stata_glm <- function(x) {
   
   vars <- substring(x, 5)
@@ -111,6 +124,7 @@ stata_glm <- function(x) {
   
 }
 
+#Function to parse "logit dependent cov_x cov_y" inputs
 stata_logit <- function(x) {
   
   vars <- substring(x, 7)
@@ -126,7 +140,7 @@ stata_logit <- function(x) {
 }
 
 
-
+#Function that detects the stata input and returns R output
 stata2r <- function(x) {
     
     
@@ -195,12 +209,15 @@ stata2r <- function(x) {
     
   }
   
+  #If line is empty, return NULL
+  
   if (str_detect(x, "^$")) {
     
     return(NULL)
     
   }
   
+  #If line is meaningless (e.g. an error) or is not a feature yet, return error message
   else {
     
     err <- str_split_fixed(x, " ", n = 2)[1]
@@ -215,10 +232,13 @@ stata2r <- function(x) {
     
     
 
-
+#Load shiny libraries
 library(shiny)
 library(shinyAce)
 library(shinyWidgets)
+
+
+#Add example stata code to evaluate
 
 init <- "use \"auto.dta\"
 
@@ -230,7 +250,8 @@ tab mpg_binary mpg
 glm mpg price trunk weight
 "
 
-# Define UI for application that draws a histogram
+# Define UI of application with a do file editor via aceEditor, an output section, a list of variables, and a variable explanation/breakdown
+
 ui <-   fluidPage(
     h1("Stayta editor"),
     fluidRow(
@@ -286,19 +307,22 @@ ui <-   fluidPage(
     )
 )
 
-# Define server logic required to draw a histogram
+# Define server logic
+
 server <- function(input, output, session) {
   
   
   values <- reactiveVal(NULL)
   
+  #If we observe a press to evaluate or a hotkey to evaluate, paste old output to evaluated new output to have a continous output
   
         observeEvent(input$eval, {
           
           old_values <- values()
           
           
-            
+          #If there is no code highlighted/selected and cursor is not in the editor, evaluate it all on evaluate button  
+          
             if (is.null(input$code_selection)) {
               
               code_df <- parse_code(isolate(input$code)) %>%
@@ -316,6 +340,8 @@ server <- function(input, output, session) {
               values(new_str) 
               
             }
+          
+          #If cursor is in the editor, but the highlighted code is empty, evaluate it all on evaluate button
           
           else if (str_detect(isolate(input$code_selection), "^$")) {
             
@@ -336,6 +362,7 @@ server <- function(input, output, session) {
           }
             
         
+          #If cursor is in the editor and is highlighting code, only evaluate the highlighted code when evaluate button is pressed
           
           else {
             
@@ -356,6 +383,9 @@ server <- function(input, output, session) {
           }
           
         })
+        
+        #Mimick the same for hot keys:
+        #ctr-D will evaluate all if no selection or just the line if highlighted code selection
         
         observeEvent(input$code_run_key, {
           
@@ -421,7 +451,7 @@ server <- function(input, output, session) {
         })
         
   
-        
+        #Print the output
   
         output$output <- renderPrint({
           
@@ -436,6 +466,8 @@ server <- function(input, output, session) {
 
         })
         
+        #Printable for debugging to see the selection
+        
         output$inp <- renderPrint({
           
           
@@ -446,6 +478,9 @@ server <- function(input, output, session) {
           #parse(text = isolate(input$code))
           
         })
+        
+        #Render a list of buttons to see variable info based on dataset stored as "test_df"
+        # "use x.dta" will load these radio buttons
         
         output$radio_vars <- renderUI({
           
@@ -459,6 +494,9 @@ server <- function(input, output, session) {
                              bigger = TRUE)
           
         })
+        
+        # Render information about the variable selected by the radio button
+        # This wil render attributes and class information about that variable
         
         output$var_info <- renderPrint({
           
